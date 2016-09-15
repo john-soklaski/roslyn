@@ -96,10 +96,11 @@ namespace Roslyn.Test.Performance.Utilities
         public static void ShellOutVital(
                 string file,
                 string args,
-                string workingDirectory,
+                string workingDirectory = null,
+                bool suppressEcho = false,
                 CancellationToken cancellationToken = default(CancellationToken))
         {
-            var result = ShellOut(file, args, workingDirectory, cancellationToken);
+            var result = ShellOut(file, args, workingDirectory, suppressEcho, cancellationToken);
             if (result.Failed)
             {
                 LogProcessResult(result);
@@ -113,9 +114,15 @@ namespace Roslyn.Test.Performance.Utilities
         public static ProcessResult ShellOut(
                 string file,
                 string args,
-                string workingDirectory,
+                string workingDirectory = null,
+                bool suppressEcho = false,
                 CancellationToken cancellationToken = default(CancellationToken))
         {
+            if (workingDirectory == null)
+            {
+                workingDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            }
+
             var tcs = new TaskCompletionSource<ProcessResult>();
             var startInfo = new ProcessStartInfo(file, args);
             startInfo.RedirectStandardOutput = true;
@@ -133,7 +140,7 @@ namespace Roslyn.Test.Performance.Utilities
                 cancellationToken.Register(() => process.Kill());
             }
 
-            if (RuntimeSettings.IsVerbose)
+            if (!suppressEcho && RuntimeSettings.IsVerbose)
             {
                 Log($"running \"{file}\" with arguments \"{args}\" from directory {workingDirectory}");
             }
@@ -181,11 +188,6 @@ namespace Roslyn.Test.Performance.Utilities
         /// </summary>
         public static string StdoutFrom(string program, string args = "", string workingDirectory = null)
         {
-            if (workingDirectory == null)
-            {
-                workingDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            }
-
             var result = ShellOut(program, args, workingDirectory);
             if (result.Failed)
             {

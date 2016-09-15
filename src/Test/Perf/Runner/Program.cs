@@ -16,22 +16,50 @@ namespace Runner
 {
     public static class Program
     {
-        public static void Main(string[] args)
+        public static int Main(string[] args)
         {
 
             bool shouldReportBenchview = false;
             bool shouldUploadTrace = true;
             bool isCiTest = false;
+            string submissionName = null;
+            string submissionType = null;
             string traceDestination = @"\\mlangfs1\public\basoundr\PerfTraces";
 
             var parameterOptions = new OptionSet()
             {
-                {"report-benchview", "report the performance retults to benview.", _ => shouldReportBenchview = true},
+                {"report-benchview", "report the performance results to benchview.", _ => shouldReportBenchview = true},
+                {"benchview-submission-type=", $"submission type to use when uploading to benchview ({String.Join(",", ValidSubmissionTypes)})", type => { submissionType = type; } },
+                {"benchview-submission-name=", "submission name to use when uploading to benchview (required for private and local submissions)", name => { submissionName = name; } },
                 {"ci-test", "mention that we are running in the continuous integration lab", _ => isCiTest = true},
                 {"no-trace-upload", "disable the uploading of traces", _ => shouldUploadTrace = false},
                 {"trace-upload_destination", "set the trace uploading destination", loc => { traceDestination = loc; }}
             };
             parameterOptions.Parse(args);
+
+            if (shouldReportBenchview)
+            {
+                if (String.IsNullOrWhiteSpace(submissionType))
+                {
+                    Log("Parameter --benchview-submission-type is required when --report-benchview is specified");
+                    return -1;
+                }
+
+                if (!IsValidSubmissionType(submissionType))
+                {
+                    Log($"Parameter --benchview-submission-type must be one of ({String.Join(",", ValidSubmissionTypes)})");
+                    return -1;
+                }
+
+                if (String.IsNullOrWhiteSpace(submissionName) && submissionType != "rolling")
+                {
+                    Log("Parameter --benchview-submission-name is required for \"private\" and \"local\" submissions");
+                    return -1;
+                }
+
+                Log("Checking for valid environment");
+                CheckEnvironment();
+            }
 
             Cleanup();
             AsyncMain(isCiTest).GetAwaiter().GetResult();
@@ -44,7 +72,7 @@ namespace Runner
             if (shouldReportBenchview)
             {
                 Log("Uploading results to benchview");
-                UploadBenchviewReport();
+                UploadBenchviewReport(submissionType, submissionName);
             }
 
             if (shouldUploadTrace)
@@ -52,6 +80,8 @@ namespace Runner
                 Log("Uploading traces");
                 UploadTraces(GetCPCDirectoryPath(), traceDestination);
             }
+
+            return 0;
         }
 
         private static void Cleanup()
