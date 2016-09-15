@@ -117,23 +117,23 @@ namespace Roslyn.Test.Performance.Runner
             var buildJson = Path.Combine(outputDir, "build.json");
             var machinedataJson = Path.Combine(outputDir, "machinedata.json");
 
-            ShellOutVital("py", $"\"{submissionMetadataPy}\" --name \"{submissionName}\" --user-email roslyn-automation@microsoft.com -o \"{submissionMetadataJson}\"");
-            ShellOutVital("py", $"\"{buildPy}\" git --type {submissionType} -o \"{buildJson}\"");
-            ShellOutVital("py", $"\"{machinedataPy}\" -o \"{machinedataJson}\"");
-
             string hash = StdoutFrom("git", "rev-parse HEAD");
-
+            string branch = StdoutFrom("git", "rev-parse --abbrev-ref HEAD");
             if (string.IsNullOrWhiteSpace(submissionName))
             {
                 if (submissionType == "rolling")
                 {
-                    submissionName = $"roslyn rolling {hash}";
+                    submissionName = $"roslyn rolling {branch} {hash}";
                 }
                 else
                 {
                     throw new Exception($"submissionName was not provided, but submission type is {submissionType}");
                 }
             }
+
+            ShellOutVital("py", $"\"{submissionMetadataPy}\" --name \"{submissionName}\" --user-email roslyn-automation@microsoft.com -o \"{submissionMetadataJson}\"");
+            ShellOutVital("py", $"\"{buildPy}\" git --type {submissionType} -o \"{buildJson}\"");
+            ShellOutVital("py", $"\"{machinedataPy}\" -o \"{machinedataJson}\"");
 
             string submissionJson = Path.Combine(outputDir, $"submission_{hash}.json");
 

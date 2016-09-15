@@ -14,6 +14,12 @@ def generate(boolean isPr) {
     def myJob = job(jobName) {
         description('perf run')
 
+        wrappers {
+            credentialsBinding {
+                string('BV_UP_SAS_TOKEN', 'Roslyn Perf BenchView Sas')
+            }
+        }
+
         steps {
             batchFile("""powershell -File ./build/scripts/run_perf.ps1""")
         }
