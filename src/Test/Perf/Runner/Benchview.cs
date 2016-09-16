@@ -131,11 +131,17 @@ namespace Roslyn.Test.Performance.Runner
                 }
             }
 
-            ShellOutVital("py", $"\"{submissionMetadataPy}\" --name \"{submissionName}\" --user-email roslyn-automation@microsoft.com -o \"{submissionMetadataJson}\"");
+            ShellOutVital("py", $"\"{submissionMetadataPy}\" --name \"{submissionName}\" --user-email dotnet-bot@microsoft.com -o \"{submissionMetadataJson}\"");
             ShellOutVital("py", $"\"{buildPy}\" git --type {submissionType} -o \"{buildJson}\"");
             ShellOutVital("py", $"\"{machinedataPy}\" -o \"{machinedataJson}\"");
 
             string submissionJson = Path.Combine(outputDir, $"submission_{hash}.json");
+
+#if DEBUG
+            string configuration = "Debug";
+#else
+            string configuration = "Release";
+#endif
 
             string arguments = $@"
 ""{submissionPy}""
@@ -143,12 +149,12 @@ namespace Roslyn.Test.Performance.Runner
  --metadata ""{submissionMetadataJson}""
  --build ""{buildJson}""
  --machine-data ""{machinedataJson}""
- --group roslyn
+ --group ""roslyn test""
  --type {submissionType}
- --config-name Release
- --config configuration Release
+ --config-name {configuration}
+ --config configuration {configuration}
  --architecture amd64
- --machinepool ""4-core""
+ --machinepool ""ml-perf""
  -o ""{submissionJson}""
 ";
 
