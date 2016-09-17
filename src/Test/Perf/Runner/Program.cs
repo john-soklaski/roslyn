@@ -62,6 +62,16 @@ namespace Runner
                 Log("Checking for valid environment");
                 CheckEnvironment();
 
+                if (branch != null)
+                {
+                    // FIXME: Temporary hack for jenkins. GIT_BRANCH env var prefixes branch name with origin/
+                    string prefix = "origin/";
+                    if (branch.StartsWith(prefix))
+                    {
+                        branch = branch.Substring(prefix.Length);
+                    }
+                }
+
                 // If user did not specify branch, determine if we can automatically determine branch name
                 if (String.IsNullOrWhiteSpace(branch))
                 {
