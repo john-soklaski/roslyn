@@ -212,10 +212,11 @@ namespace Roslyn.Test.Performance.Utilities
         /// <summary>
         /// Logs the result of a finished process
         /// </summary>
-        public static void LogProcessResult(ProcessResult result)
+        public static void LogProcessResult(ProcessResult result, bool suppressEcho = false)
         {
+            var process = suppressEcho == false ? $"{result.ExecutablePath} {result.Args}" : $"{result.ExecutablePath}"
             RuntimeSettings.Logger.Log(String.Format("The process \"{0}\" {1} with code {2}",
-                $"{result.ExecutablePath} {result.Args}",
+                process,
                 result.Failed ? "failed" : "succeeded",
                 result.Code));
             RuntimeSettings.Logger.Log($"Standard Out:\n{result.StdOut}");
