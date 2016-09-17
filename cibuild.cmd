@@ -90,19 +90,19 @@ if defined TestPerfRun (
     if defined GIT_BRANCH (
         REM Check if we have credentials to upload to benchview
         if defined BV_UP_SAS_TOKEN (
-            set "EXTRA_PERF_RUNNER_ARGS=--report-benchview --branch "%GIT_BRANCH%""
+            set "EXTRA_PERF_RUNNER_ARGS=--report-benchview --branch="%GIT_BRANCH%""
 
             REM Check if we are in a PR or this is a rolling submission
             if defined ghprbPullTitle (
                 if defined ghprbPullAuthorLogin (
-                    set "EXTRA_PERF_RUNNER_ARGS=!EXTRA_PERF_RUNNER_ARGS! --benchview-submission-name "[%ghprbPullAuthorLogin%] %ghprbPullTitle%" --benchview-submission-type private"
+                    set "EXTRA_PERF_RUNNER_ARGS=!EXTRA_PERF_RUNNER_ARGS! --benchview-submission-name="[%ghprbPullAuthorLogin%] %ghprbPullTitle%" --benchview-submission-type=private"
                 ) else {
                     echo "ghprbPullTitle was defined, but ghprbPullAuthorLogin was not"
                     call :TerminateBuildProcesses
                     exit /b 1
                 }
             ) else (
-                set "EXTRA_PERF_RUNNER_ARGS=!EXTRA_PERF_RUNNER_ARGS! --benchview-submission-type rolling"
+                set "EXTRA_PERF_RUNNER_ARGS=!EXTRA_PERF_RUNNER_ARGS! --benchview-submission-type=rolling"
             )
         )
     )
