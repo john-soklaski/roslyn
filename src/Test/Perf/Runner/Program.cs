@@ -63,7 +63,7 @@ namespace Runner
                 CheckEnvironment();
 
                 // If user did not specify branch, determine if we can automatically determine branch name
-                if (!String.IsNullOrWhiteSpace(branch))
+                if (String.IsNullOrWhiteSpace(branch))
                 {
                     var result = ShellOut("git", "symbolic -ref --short HEAD");
                     if(result.Failed)
