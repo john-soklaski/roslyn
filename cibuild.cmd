@@ -87,10 +87,10 @@ if defined TestPerfCorrectness (
 if defined TestPerfRun (
     msbuild %MSBuildAdditionalCommandLineArgs% Roslyn.sln /p:Configuration=%BuildConfiguration% /p:DeployExtension=false || goto :BuildFailed
 
-    if defined GIT_LOCAL_BRANCH (
+    if defined GIT_BRANCH (
         REM Check if we have credentials to upload to benchview
         if defined BV_UP_SAS_TOKEN (
-            set "EXTRA_PERF_RUNNER_ARGS=--report-benchview --branch "%GIT_LOCAL_BRANCH%""
+            set "EXTRA_PERF_RUNNER_ARGS=--report-benchview --branch "%GIT_BRANCH%""
 
             REM Check if we are in a PR or this is a rolling submission
             if defined ghprbPullTitle (
