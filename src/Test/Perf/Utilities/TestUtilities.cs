@@ -214,7 +214,7 @@ namespace Roslyn.Test.Performance.Utilities
         /// </summary>
         public static void LogProcessResult(ProcessResult result, bool suppressEcho = false)
         {
-            var process = suppressEcho == false ? $"{result.ExecutablePath} {result.Args}" : $"{result.ExecutablePath}"
+            var process = suppressEcho == false ? $"{result.ExecutablePath} {result.Args}" : $"{result.ExecutablePath}";
             RuntimeSettings.Logger.Log(String.Format("The process \"{0}\" {1} with code {2}",
                 process,
                 result.Failed ? "failed" : "succeeded",
