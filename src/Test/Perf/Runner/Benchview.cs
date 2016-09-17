@@ -63,7 +63,7 @@ namespace Roslyn.Test.Performance.Runner
             }
         }
 
-        internal static void UploadBenchviewReport(string submissionType, string submissionName)
+        internal static void UploadBenchviewReport(string submissionType, string submissionName, string branch)
         {
             var sasToken = Environment.GetEnvironmentVariable(sasEnvVar);
 
@@ -72,7 +72,7 @@ namespace Roslyn.Test.Performance.Runner
 
             if (result)
             {
-                var submissionJson = CreateSubmissionJson(submissionType, submissionName, Path.Combine(outputDir, "measurement.json"));
+                var submissionJson = CreateSubmissionJson(submissionType, submissionName, branch, Path.Combine(outputDir, "measurement.json"));
 
                 Log("Uploading json to Azure blob storage");
                 var uploadPy = Path.Combine(scriptDir, "upload.py");
@@ -104,7 +104,7 @@ namespace Roslyn.Test.Performance.Runner
         }
 
         /// Gets a csv file with metrics and converts them to ViBench supported JSON file
-        private static string CreateSubmissionJson(string submissionType, string submissionName, string measurementJsonPath)
+        private static string CreateSubmissionJson(string submissionType, string submissionName, string branch, string measurementJsonPath)
         {
             RuntimeSettings.Logger.Log("Creating BenchView submission json");
 
@@ -118,7 +118,6 @@ namespace Roslyn.Test.Performance.Runner
             var machinedataJson = Path.Combine(outputDir, "machinedata.json");
 
             string hash = StdoutFrom("git", "rev-parse HEAD");
-            string branch = StdoutFrom("git", "rev-parse --abbrev-ref HEAD");
             if (string.IsNullOrWhiteSpace(submissionName))
             {
                 if (submissionType == "rolling")
@@ -132,7 +131,7 @@ namespace Roslyn.Test.Performance.Runner
             }
 
             ShellOutVital("py", $"\"{submissionMetadataPy}\" --name \"{submissionName}\" --user-email dotnet-bot@microsoft.com -o \"{submissionMetadataJson}\"");
-            ShellOutVital("py", $"\"{buildPy}\" git --type {submissionType} -o \"{buildJson}\"");
+            ShellOutVital("py", $"\"{buildPy}\" git --type {submissionType} --branch \"{branch}\" -o \"{buildJson}\"");
             ShellOutVital("py", $"\"{machinedataPy}\" -o \"{machinedataJson}\"");
 
             string submissionJson = Path.Combine(outputDir, $"submission_{hash}.json");
