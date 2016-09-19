@@ -11,7 +11,7 @@ namespace Roslyn.Test.Performance.Runner
 {
     public static class Benchview 
     {
-        const string sasEnvVar = "BV_UP_SAS_TOKEN";
+        const string sasEnvVar = "BV_UPLOAD_SAS_TOKEN";
         static string scriptDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Microsoft.BenchView.JSONFormat", "tools");
         static string outputDir = GetCPCDirectoryPath();
         static string[] validSubmissionTypes = new string[] { "rolling", "private", "local" };
@@ -65,8 +65,6 @@ namespace Roslyn.Test.Performance.Runner
 
         internal static void UploadBenchviewReport(string submissionType, string submissionName, string branch)
         {
-            var sasToken = Environment.GetEnvironmentVariable(sasEnvVar);
-
             var consumptionXml = Path.Combine(GetCPCDirectoryPath(), "consumptionTempResults.xml");
             var result = ConvertConsumptionToMeasurementJson(consumptionXml);
 
@@ -76,7 +74,7 @@ namespace Roslyn.Test.Performance.Runner
 
                 Log("Uploading json to Azure blob storage");
                 var uploadPy = Path.Combine(scriptDir, "upload.py");
-                ShellOutVital("py", $"\"{uploadPy}\" \"{submissionJson}\" --container roslyn --sas-token {sasToken}", suppressEcho: true);
+                ShellOutVital("py", $"\"{uploadPy}\" \"{submissionJson}\" --container roslyn");
                 Log("Done uploading");
             }
             else
@@ -122,7 +120,7 @@ namespace Roslyn.Test.Performance.Runner
             {
                 if (submissionType == "rolling")
                 {
-                    submissionName = $"roslyn rolling {branch} {hash}";
+                    submissionName = $"roslyn {submissionType} {branch} {hash}";
                 }
                 else
                 {

@@ -97,10 +97,9 @@ namespace Roslyn.Test.Performance.Utilities
                 string file,
                 string args,
                 string workingDirectory = null,
-                bool suppressEcho = false,
                 CancellationToken cancellationToken = default(CancellationToken))
         {
-            var result = ShellOut(file, args, workingDirectory, suppressEcho, cancellationToken);
+            var result = ShellOut(file, args, workingDirectory, cancellationToken);
             if (result.Failed)
             {
                 LogProcessResult(result);
@@ -115,7 +114,6 @@ namespace Roslyn.Test.Performance.Utilities
                 string file,
                 string args,
                 string workingDirectory = null,
-                bool suppressEcho = false,
                 CancellationToken cancellationToken = default(CancellationToken))
         {
             if (workingDirectory == null)
@@ -140,7 +138,7 @@ namespace Roslyn.Test.Performance.Utilities
                 cancellationToken.Register(() => process.Kill());
             }
 
-            if (!suppressEcho && RuntimeSettings.IsVerbose)
+            if (RuntimeSettings.IsVerbose)
             {
                 Log($"running \"{file}\" with arguments \"{args}\" from directory {workingDirectory}");
             }
@@ -212,11 +210,10 @@ namespace Roslyn.Test.Performance.Utilities
         /// <summary>
         /// Logs the result of a finished process
         /// </summary>
-        public static void LogProcessResult(ProcessResult result, bool suppressEcho = false)
+        public static void LogProcessResult(ProcessResult result)
         {
-            var process = suppressEcho == false ? $"{result.ExecutablePath} {result.Args}" : $"{result.ExecutablePath}";
             RuntimeSettings.Logger.Log(String.Format("The process \"{0}\" {1} with code {2}",
-                process,
+                $"{result.ExecutablePath} {result.Args}",
                 result.Failed ? "failed" : "succeeded",
                 result.Code));
             RuntimeSettings.Logger.Log($"Standard Out:\n{result.StdOut}");

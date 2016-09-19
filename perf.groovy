@@ -16,7 +16,7 @@ def generate(boolean isPr) {
 
         wrappers {
             credentialsBinding {
-                string('BV_UP_SAS_TOKEN', 'Roslyn Perf BenchView Sas')
+                string('BV_UPLOAD_SAS_TOKEN', 'Roslyn Perf BenchView Sas')
             }
         }
 
