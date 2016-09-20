@@ -86,7 +86,28 @@ if defined TestPerfCorrectness (
 
 if defined TestPerfRun (
     msbuild %MSBuildAdditionalCommandLineArgs% Roslyn.sln /p:Configuration=%BuildConfiguration% /p:DeployExtension=false || goto :BuildFailed
-    .\Binaries\%BuildConfiguration%\Roslyn.Test.Performance.Runner.exe --no-trace-upload || goto :BuildFailed
+
+    if defined GIT_BRANCH (
+        REM Check if we have credentials to upload to benchview
+        if defined BV_UPLOAD_SAS_TOKEN (
+            set "EXTRA_PERF_RUNNER_ARGS=--report-benchview --branch "%GIT_BRANCH%""
+
+            REM Check if we are in a PR or this is a rolling submission
+            if defined ghprbPullTitle (
+                if defined ghprbPullAuthorLogin (
+                    set "EXTRA_PERF_RUNNER_ARGS=!EXTRA_PERF_RUNNER_ARGS! --benchview-submission-name "[%ghprbPullAuthorLogin%] %ghprbPullTitle%" --benchview-submission-type private"
+                ) else {
+                    echo "ghprbPullTitle was defined, but ghprbPullAuthorLogin was not"
+                    call :TerminateBuildProcesses
+                    exit /b 1
+                }
+            ) else (
+                set "EXTRA_PERF_RUNNER_ARGS=!EXTRA_PERF_RUNNER_ARGS! --benchview-submission-type rolling"
+            )
+        )
+    )
+
+    .\Binaries\%BuildConfiguration%\Roslyn.Test.Performance.Runner.exe --no-trace-upload !EXTRA_PERF_RUNNER_ARGS! || goto :BuildFailed
     exit /b 0
 )
 
