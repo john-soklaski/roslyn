@@ -89,7 +89,7 @@ if defined TestPerfRun (
 
     if defined GIT_BRANCH (
         REM Check if we have credentials to upload to benchview
-        if defined BV_UP_SAS_TOKEN (
+        if defined BV_UPLOAD_SAS_TOKEN (
             set "EXTRA_PERF_RUNNER_ARGS=--report-benchview --branch "%GIT_BRANCH%""
 
             REM Check if we are in a PR or this is a rolling submission
