@@ -40,7 +40,7 @@ def generate(boolean isPr) {
     Utilities.setMachineAffinity(myJob, 'Windows_NT', 'latest-or-auto-perf')
 
     if (isPr) {
-        Utilities.addGithubPRTriggerForBranch(myJob, branchName, 'Performance Test Run', "(?i).*test\\W+perf.*", ['Microsoft', 'dotnet'])
+        Utilities.addPrivateGithubPRTriggerForBranch(myJob, branchName, 'Performance Test Run', "(?i).*test\\W+perf.*", ['Microsoft', 'dotnet'], null)
     }
     else {
         Utilities.addGithubPushTrigger(myJob)
