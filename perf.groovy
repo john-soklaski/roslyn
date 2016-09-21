@@ -38,17 +38,9 @@ def generate(boolean isPr) {
     Utilities.addArchival(myJob, archiveSettings)
     Utilities.standardJobSetup(myJob, projectName, isPr, defaultBranch)
     Utilities.setMachineAffinity(myJob, 'Windows_NT', 'latest-or-auto-perf')
-    Utilities.addGithubPushTrigger(myJob)
 
     if (isPr) {
-        // Utilities.addGithubPRTriggerForBranch(newJob, branch, "Windows ${configuration}")
-        TriggerBuilder prTrigger = TriggerBuilder.triggerOnPullRequest()
-        prTrigger.permitOrg('Microsoft')
-        prTrigger.permitOrg('dotnet')
-        prTrigger.setCustomTriggerPhrase("(?i).*test\\W+perf.*" )
-        prTrigger.triggerForBranch('master');
-        prTrigger.setGithubContext('Performance Test Run')
-        prTrigger.emitTrigger(myJob)
+        Utilities.addGithubPRTriggerForBranch(myJob, branchName, 'Performance Test Run', "(?i).*test\\W+perf.*", ['Microsoft', 'dotnet'])
     }
     else {
         Utilities.addGithubPushTrigger(myJob)
