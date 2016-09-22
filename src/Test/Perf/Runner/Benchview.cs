@@ -132,7 +132,7 @@ namespace Roslyn.Test.Performance.Runner
             ShellOutVital("py", $"\"{buildPy}\" git --type {submissionType} --branch \"{branch}\" -o \"{buildJson}\"");
             ShellOutVital("py", $"\"{machinedataPy}\" -o \"{machinedataJson}\"");
 
-            string submissionJson = Path.Combine(outputDir, $"submission_{hash}.json");
+            string submissionJson = Path.Combine(outputDir, "submission.json");
 
 #if DEBUG
             string configuration = "Debug";
