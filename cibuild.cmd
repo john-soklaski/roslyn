@@ -94,13 +94,13 @@ if defined TestPerfRun (
 
             REM Check if we are in a PR or this is a rolling submission
             if defined ghprbPullTitle (
-                if defined ghprbTriggerAuthor (
-                    set "EXTRA_PERF_RUNNER_ARGS=!EXTRA_PERF_RUNNER_ARGS! --benchview-submission-name "[%ghprbTriggerAuthor%] %ghprbPullTitle%" --benchview-submission-type private"
-                ) else {
-                    echo "ghprbPullTitle was defined, but ghprbTriggerAuthor was not"
+                if defined ghprbPullAuthorLogin (
+                    set "EXTRA_PERF_RUNNER_ARGS=!EXTRA_PERF_RUNNER_ARGS! --benchview-submission-name "[%ghprbPullAuthorLogin%] %ghprbPullTitle%" --benchview-submission-type private"
+                ) else (
+                    echo "ghprbPullTitle was defined, but ghprbPullAuthorLogin was not"
                     call :TerminateBuildProcesses
                     exit /b 1
-                }
+                )
             ) else (
                 set "EXTRA_PERF_RUNNER_ARGS=!EXTRA_PERF_RUNNER_ARGS! --benchview-submission-type rolling"
             )
