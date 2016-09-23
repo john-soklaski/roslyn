@@ -83,8 +83,7 @@ namespace Roslyn.Test.Performance.Runner
             }
         }
 
-        /// Takes a consumptionTempResults file and converts to json file
-        /// Each info contains the {ScenarioName, Metric Key, Metric value}
+        /// Takes a consumption xml file and converts to measurement json file
         private static bool ConvertConsumptionToMeasurementJson(string source)
         {
             Log("Converting Consumption format to BenchView measurement json");
@@ -101,7 +100,7 @@ namespace Roslyn.Test.Performance.Runner
             return true;
         }
 
-        /// Gets a csv file with metrics and converts them to ViBench supported JSON file
+        /// Takes a measurement.json in BenchView's format and generates a submission.json, ready for upload 
         private static string CreateSubmissionJson(string submissionType, string submissionName, string branch, string measurementJsonPath)
         {
             RuntimeSettings.Logger.Log("Creating BenchView submission json");
@@ -146,7 +145,7 @@ namespace Roslyn.Test.Performance.Runner
  --metadata ""{submissionMetadataJson}""
  --build ""{buildJson}""
  --machine-data ""{machinedataJson}""
- --group ""roslyn test""
+ --group ""roslyn""
  --type {submissionType}
  --config-name {configuration}
  --config configuration {configuration}

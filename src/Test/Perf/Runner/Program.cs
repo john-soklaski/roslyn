@@ -64,7 +64,7 @@ namespace Runner
 
                 if (branch != null)
                 {
-                    // FIXME: Temporary hack for jenkins. GIT_BRANCH env var prefixes branch name with origin/
+                    // Workaround for Jenkins. GIT_BRANCH env var prefixes branch name with origin/
                     string prefix = "origin/";
                     if (branch.StartsWith(prefix))
                     {
