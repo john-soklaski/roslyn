@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.IO;
@@ -9,7 +9,6 @@ using static Roslyn.Test.Performance.Utilities.TestUtilities;
 using static Roslyn.Test.Performance.Runner.Tools;
 using static Roslyn.Test.Performance.Runner.Benchview;
 using static Roslyn.Test.Performance.Runner.TraceBackup;
-using Roslyn.Test.Performance.Runner;
 using Mono.Options;
 
 namespace Runner
@@ -18,7 +17,6 @@ namespace Runner
     {
         public static int Main(string[] args)
         {
-
             bool shouldReportBenchview = false;
             bool shouldUploadTrace = true;
             bool isCiTest = false;
@@ -41,48 +39,11 @@ namespace Runner
 
             if (shouldReportBenchview)
             {
-                if (String.IsNullOrWhiteSpace(submissionType))
+                if (!CheckBenchViewOptions(submissionType, submissionName) ||
+                    !CheckEnvironment() ||
+                    !DetermineBranch(ref branch))
                 {
-                    Log("Parameter --benchview-submission-type is required when --report-benchview is specified");
                     return -1;
-                }
-
-                if (!IsValidSubmissionType(submissionType))
-                {
-                    Log($"Parameter --benchview-submission-type must be one of ({String.Join(",", ValidSubmissionTypes)})");
-                    return -1;
-                }
-
-                if (String.IsNullOrWhiteSpace(submissionName) && submissionType != "rolling")
-                {
-                    Log("Parameter --benchview-submission-name is required for \"private\" and \"local\" submissions");
-                    return -1;
-                }
-
-                Log("Checking for valid environment");
-                CheckEnvironment();
-
-                if (branch != null)
-                {
-                    // Workaround for Jenkins. GIT_BRANCH env var prefixes branch name with origin/
-                    string prefix = "origin/";
-                    if (branch.StartsWith(prefix))
-                    {
-                        branch = branch.Substring(prefix.Length);
-                    }
-                }
-
-                // If user did not specify branch, determine if we can automatically determine branch name
-                if (String.IsNullOrWhiteSpace(branch))
-                {
-                    var result = ShellOut("git", "symbolic -ref --short HEAD");
-                    if(result.Failed)
-                    {
-                        Log("Parameter --branch is required because we were unable to automatically determine the branch name. You may be in a detached head state");
-                        return -1;
-                    }
-
-                    branch = result.StdOut;
                 }
             }
 
@@ -109,6 +70,57 @@ namespace Runner
             return 0;
         }
 
+        private static bool CheckBenchViewOptions(string submissionType, string submissionName)
+        {
+            if (String.IsNullOrWhiteSpace(submissionType))
+            {
+                Log("Parameter --benchview-submission-type is required when --report-benchview is specified");
+                return false;
+            }
+
+            if (!IsValidSubmissionType(submissionType))
+            {
+                Log($"Parameter --benchview-submission-type must be one of ({String.Join(",", ValidSubmissionTypes)})");
+                return false;
+            }
+
+            if (String.IsNullOrWhiteSpace(submissionName) && submissionType != "rolling")
+            {
+                Log("Parameter --benchview-submission-name is required for \"private\" and \"local\" submissions");
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool DetermineBranch(ref string branch)
+        {
+            if (branch != null)
+            {
+                // Workaround for Jenkins. GIT_BRANCH env var prefixes branch name with origin/
+                string prefix = "origin/";
+                if (branch.StartsWith(prefix))
+                {
+                    branch = branch.Substring(prefix.Length);
+                }
+            }
+
+            // If user did not specify branch, determine if we can automatically determine branch name
+            if (String.IsNullOrWhiteSpace(branch))
+            {
+                var result = ShellOut("git", "symbolic-ref --short HEAD");
+                if (result.Failed)
+                {
+                    Log("Parameter --branch is required because we were unable to automatically determine the branch name. You may be in a detached head state");
+                    return false;
+                }
+
+                branch = result.StdOut;
+            }
+
+            return true;
+        }
+
         private static void Cleanup()
         {
             var consumptionTempResultsPath = Path.Combine(GetCPCDirectoryPath(), "ConsumptionTempResults.xml");
@@ -129,7 +141,6 @@ namespace Runner
 
         private static async Task AsyncMain(bool isRunningUnderCI)
         {
-
             RuntimeSettings.IsRunnerAttached = true;
 
             var testDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Perf", "tests");
@@ -217,7 +228,6 @@ namespace Runner
                         traceManager.Stop();
                         traceManager.ResetScenarioGenerator();
                     }
-
                 }
                 catch (Exception)
                 {

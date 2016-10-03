@@ -2,65 +2,65 @@
 
 using System;
 using System.IO;
+using System.Linq;
 
 using Roslyn.Test.Performance.Utilities;
 using static Roslyn.Test.Performance.Utilities.TestUtilities;
-using static Roslyn.Test.Performance.Runner.Tools;
 
 namespace Roslyn.Test.Performance.Runner
 {
-    public static class Benchview 
+    public static class Benchview
     {
-        const string sasEnvVar = "BV_UPLOAD_SAS_TOKEN";
-        static string scriptDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Microsoft.BenchView.JSONFormat", "tools");
-        static string outputDir = GetCPCDirectoryPath();
-        static string[] validSubmissionTypes = new string[] { "rolling", "private", "local" };
+        private const string s_sasEnvironmentVar = "BV_UPLOAD_SAS_TOKEN";
+        private static readonly string s_scriptDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Microsoft.BenchView.JSONFormat", "tools");
+        private static readonly string s_outputDirectory = GetCPCDirectoryPath();
+        private static readonly string[] s_validSubmissionTypes = new string[] { "rolling", "private", "local" };
 
         public static string[] ValidSubmissionTypes
         {
             get
             {
-                return validSubmissionTypes;
+                return s_validSubmissionTypes;
             }
         }
 
         internal static bool IsValidSubmissionType(string submissionType)
         {
-            foreach(var type in validSubmissionTypes)
-            {
-                if(submissionType == type)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return s_validSubmissionTypes.Any(type => type == submissionType);
         }
 
-        internal static void CheckEnvironment()
+        internal static bool CheckEnvironment()
         {
-            var sasToken = Environment.GetEnvironmentVariable(sasEnvVar);
+            Log("Checking for valid environment");
+
+            var sasToken = Environment.GetEnvironmentVariable(s_sasEnvironmentVar);
             if (String.IsNullOrEmpty(sasToken))
             {
-                throw new Exception($"{sasEnvVar} was not defined");
+                Log($"{s_sasEnvironmentVar} was not defined");
+                return false;
             }
 
             var whereGit = ShellOut("where", "git");
             if (whereGit.Failed)
             {
-                throw new Exception("git was not found on the PATH");
+                Log("git was not found on the PATH");
+                return false;
             }
 
             var wherePy = ShellOut("where", "py");
             if (wherePy.Failed)
             {
-                throw new Exception("py was not found on the PATH");
+                Log("py was not found on the PATH");
+                return false;
             }
 
-            if (!Directory.Exists(scriptDir))
+            if (!Directory.Exists(s_scriptDirectory))
             {
-                throw new Exception($"BenchView Tools not found at {scriptDir}");
+                Log($"BenchView Tools not found at {s_scriptDirectory}");
+                return false;
             }
+
+            return true;
         }
 
         internal static void UploadBenchviewReport(string submissionType, string submissionName, string branch)
@@ -70,10 +70,10 @@ namespace Roslyn.Test.Performance.Runner
 
             if (result)
             {
-                var submissionJson = CreateSubmissionJson(submissionType, submissionName, branch, Path.Combine(outputDir, "measurement.json"));
+                var submissionJson = CreateSubmissionJson(submissionType, submissionName, branch, Path.Combine(s_outputDirectory, "measurement.json"));
 
                 Log("Uploading json to Azure blob storage");
-                var uploadPy = Path.Combine(scriptDir, "upload.py");
+                var uploadPy = Path.Combine(s_scriptDirectory, "upload.py");
                 ShellOutVital("py", $"\"{uploadPy}\" \"{submissionJson}\" --container roslyn");
                 Log("Done uploading");
             }
@@ -93,8 +93,8 @@ namespace Roslyn.Test.Performance.Runner
                 return false;
             }
 
-            var measurementPy = Path.Combine(scriptDir, "measurement.py");
-            var measurementJson = Path.Combine(outputDir, "measurement.json");
+            var measurementPy = Path.Combine(s_scriptDirectory, "measurement.py");
+            var measurementJson = Path.Combine(s_outputDirectory, "measurement.json");
             ShellOutVital("py", $"\"{measurementPy}\" rps \"{source}\" --better desc -o \"{measurementJson}\"");
 
             return true;
@@ -105,14 +105,14 @@ namespace Roslyn.Test.Performance.Runner
         {
             RuntimeSettings.Logger.Log("Creating BenchView submission json");
 
-            var submissionMetadataPy = Path.Combine(scriptDir, "submission-metadata.py");
-            var buildPy = Path.Combine(scriptDir, "build.py");
-            var machinedataPy = Path.Combine(scriptDir, "machinedata.py");
-            var submissionPy = Path.Combine(scriptDir, "submission.py");
+            var submissionMetadataPy = Path.Combine(s_scriptDirectory, "submission-metadata.py");
+            var buildPy = Path.Combine(s_scriptDirectory, "build.py");
+            var machinedataPy = Path.Combine(s_scriptDirectory, "machinedata.py");
+            var submissionPy = Path.Combine(s_scriptDirectory, "submission.py");
 
-            var submissionMetadataJson = Path.Combine(outputDir, "submission-metadata.json");
-            var buildJson = Path.Combine(outputDir, "build.json");
-            var machinedataJson = Path.Combine(outputDir, "machinedata.json");
+            var submissionMetadataJson = Path.Combine(s_outputDirectory, "submission-metadata.json");
+            var buildJson = Path.Combine(s_outputDirectory, "build.json");
+            var machinedataJson = Path.Combine(s_outputDirectory, "machinedata.json");
 
             string hash = StdoutFrom("git", "rev-parse HEAD");
             if (string.IsNullOrWhiteSpace(submissionName))
@@ -131,7 +131,7 @@ namespace Roslyn.Test.Performance.Runner
             ShellOutVital("py", $"\"{buildPy}\" git --type {submissionType} --branch \"{branch}\" -o \"{buildJson}\"");
             ShellOutVital("py", $"\"{machinedataPy}\" -o \"{machinedataJson}\"");
 
-            string submissionJson = Path.Combine(outputDir, "submission.json");
+            string submissionJson = Path.Combine(s_outputDirectory, "submission.json");
 
 #if DEBUG
             string configuration = "Debug";
